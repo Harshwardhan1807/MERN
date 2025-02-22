@@ -1,50 +1,93 @@
-const Product = require("../models/productModel");
+const Product = require("../models/ProductModel");
 const recordsPerPage = require("../config/pagination");
 
 const getProducts = async (req, res, next) => {
     try {
-        let query = {}
-        let queryConditon = false
-        let priceQuerycondition = {}
-        let ratingQuerycondition = {}
+        let query = {};
+        let queryCondition = false
+
+        let priceQueryCondition = {};
         if (req.query.price) {
-            priceQuerycondition = {
-                price: { $lte: Number(req.query.price) }
-            }
-            queryConditon = true
+            queryCondition = true;
+            priceQueryCondition = { price: { $lte: Number(req.query.price) } };
         }
+        let ratingQueryCondition = {};
         if (req.query.rating) {
-            ratingQuerycondition = {
-                rating: { $in: req.query.rating.split(",") }
-            }
-            queryConditon = true
+            queryCondition = true;
+            ratingQueryCondition = { rating: { $in: req.query.rating.split(",") } };
         }
-        let categoryCondition = {}
-        const categoryName = req.params.categoryName || "";
+        let categoryQueryCondition = {}
+        const categoryName = req.params.categoryName || ""
         if (categoryName) {
-            queryConditon = true
+            queryCondition = true
             let a = categoryName.replaceAll(",", "/")
-            var regex = new RegExp("^" + a);
-            categoryCondition = { category: regex }
+            var regEx = new RegExp("^" + a)
+            categoryQueryCondition = { category: regEx }
+        }
+        if (req.query.category) {
+            queryCondition = true
+            let a = req.query.category.split(",").map((item) => {
+                if (item) return new RegExp("^" + item)
+            })
+            categoryQueryCondition = {
+                category: { $in: a }
+            }
+        }
+        let attrsQueryCondition = []
+        if (req.query.attrs) {
+            queryCondition = true
+            attrsQueryCondition = req.query.attrs.split(",").reduce((acc, item) => {
+                if (item) {
+                    let a = item.split("-")
+                    let values = [...a]
+                    values.shift()
+                    let a1 = {
+                        attrs: { $elemMatch: { key: a[0], value: { $in: values } } }
+                    }
+                    acc.push(a1)
+                    
+                    return acc
+                } else return acc
+            }, []);
+            console.dir(attrsQueryCondition,{depth: null})
         }
 
-        if (queryConditon) {
-            query = { $and: [priceQuerycondition, ratingQuerycondition, categoryCondition] }
+        if (queryCondition) {
+            query = {
+                $and: [
+                priceQueryCondition, 
+                ratingQueryCondition, 
+                categoryQueryCondition,
+                ...attrsQueryCondition
+            ],
+            };
         }
 
+        //pagination
         const pageNum = Number(req.query.pageNum) || 1;
-        let sort = {}
+
+        // sort by name, price etc.
+        let sort = {};
         const sortOption = req.query.sort || "";
         if (sortOption) {
             let sortOpt = sortOption.split("_");
-            sort = { [sortOpt[0]]: Number(sortOpt[1]) }
+            sort = { [sortOpt[0]]: Number(sortOpt[1]) };
         }
+
         const totalProducts = await Product.countDocuments(query);
-        const products = await Product.find(query).skip((recordsPerPage * (pageNum - 1))).sort(sort).limit(recordsPerPage);
-        res.json(products);
-    }
-    catch (error) {
+        const products = await Product.find(query)
+            .skip(recordsPerPage * (pageNum - 1))
+            .sort(sort)
+            .limit(recordsPerPage);
+
+        res.json({
+            products,
+            pageNum,
+            paginationLinksNumber: Math.ceil(totalProducts / recordsPerPage),
+        });
+    } catch (error) {
         next(error);
     }
 };
-module.exports = getProducts
+module.exports = getProducts;
+
