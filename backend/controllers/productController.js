@@ -45,22 +45,11 @@ const getProducts = async (req, res, next) => {
                         attrs: { $elemMatch: { key: a[0], value: { $in: values } } }
                     }
                     acc.push(a1)
-                    
+
                     return acc
                 } else return acc
             }, []);
-            console.dir(attrsQueryCondition,{depth: null})
-        }
-
-        if (queryCondition) {
-            query = {
-                $and: [
-                priceQueryCondition, 
-                ratingQueryCondition, 
-                categoryQueryCondition,
-                ...attrsQueryCondition
-            ],
-            };
+            // console.dir(attrsQueryCondition, { depth: null })
         }
 
         //pagination
@@ -74,8 +63,36 @@ const getProducts = async (req, res, next) => {
             sort = { [sortOpt[0]]: Number(sortOpt[1]) };
         }
 
+        const searchQuery = req.params.searchQuery || ""
+        let searchQuerycondition = {}
+        if (searchQuery) {
+            queryCondition = true
+            searchQuerycondition = { $text: { $search: searchQuery } }
+            select = {
+                score: { $meta: "textScore" }
+            }
+            sort = {
+                score: { $meta: "textScore" }
+            }
+        }
+
+        if (queryCondition) {
+            query = {
+                $and: [
+                    priceQueryCondition,
+                    ratingQueryCondition,
+                    categoryQueryCondition,
+                    searchQuerycondition,
+                    ...attrsQueryCondition
+                ],
+            };
+        }
+
+
+
         const totalProducts = await Product.countDocuments(query);
         const products = await Product.find(query)
+            .select(select)
             .skip(recordsPerPage * (pageNum - 1))
             .sort(sort)
             .limit(recordsPerPage);
@@ -89,5 +106,49 @@ const getProducts = async (req, res, next) => {
         next(error);
     }
 };
-module.exports = getProducts;
+
+const getProductById = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id).populate("reviews").orFail()
+        res.json(product);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getBestSellers = async (req, res, next) => {
+    try {
+        const products = await Product.aggregate([
+            { $sort: { category: 1, sales: -1 } },
+            { $group: { _id: "$category", doc_with_max_sales: { $first: "$$ROOT" } } },
+            { $replaceWith: "$doc_with_max_sales" },
+            { $project: { _id: 1, name: 1, images: 1, category: 1, description: 1 } },
+            { $limit: 3 }
+        ])
+        res.json(products)
+    } catch (error) {
+        next(error)
+    }
+};
+
+const adminGetProducts = async (req, res, next) => {
+    try {
+        const products = await Product.find().sort({ category: 1 }).select("name price category")
+        res.json(products)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const adminDeleteProduct = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id).orFail()
+        await product.remove()
+        res.json({ "Product deleted successfully": true })
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports = { getProducts, getProductById, getBestSellers, adminGetProducts, adminDeleteProduct };
 
