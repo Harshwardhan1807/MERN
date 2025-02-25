@@ -1,8 +1,11 @@
 const express = require("express");
+const fileUpload = require("express-fileupload");
 const app = express();
 const port = 3002;
 
 app.use(express.json());
+app.use(fileUpload());
+
 const apiRoutes = require("./routes/apiRoutes");
 
 app.get("/", async (req, res, next) => {

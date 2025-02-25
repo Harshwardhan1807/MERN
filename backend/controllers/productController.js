@@ -1,5 +1,6 @@
 const Product = require("../models/ProductModel");
 const recordsPerPage = require("../config/pagination");
+const imageValidate = require("../utils/imageValidate")
 
 const getProducts = async (req, res, next) => {
     try {
@@ -150,5 +151,80 @@ const adminDeleteProduct = async (req, res, next) => {
     }
 }
 
-module.exports = { getProducts, getProductById, getBestSellers, adminGetProducts, adminDeleteProduct };
+const adminCreateProducts = async (req, res, next) => {
+    try {
+        const product = new Product()
+        const { name, description, count, price, category, attributesTable } = req.body
+        product.name = name
+        product.description = description
+        product.count = count
+        product.price = price
+        product.category = category
+        if (attributesTable.length > 0) {
+            attributesTable.map((item) => {
+                product.attrs.push(item)
+            })
+        }
+        await product.save()
+        res.json({ message: "Product created successfully", productId: product._id })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const adminUpdateProduct = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id).orFail()
+        const { name, description, count, price, category, attributesTable } = req.body
+        product.name = name || product.name
+        product.description = description || product.description
+        product.count = count || product.count
+        product.price = price || product.price
+        product.category = category || product.category
+        if (attributesTable.length > 0) {
+            product.attrs = []
+            attributesTable.map((item) => {
+                product.attrs.push(item)
+            })
+        } else {
+            product.attrs = []
+        }
+        await product.save()
+        res.json({ message: "Product updated successfully" })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const adminUpload = async (req, res, next) => {
+    try {
+        if (!req.files || !!req.files.images === false) {
+            return res.status(400).send("No files were uploaded.")
+        }
+        const validateResult = imageValidate(req.files.images)
+        if (validateResult.error)
+            return res.status(400).send(validateResult.error)
+        const path = require('path')
+        const { v4: uuidv4 } = require('uuid')
+
+        let imagesTable = []
+        if (Array.isArray(req.files.images)) {
+            imagesTable = req.files.images
+        } else {
+            imagesTable.push(req.files.images)
+        }
+        for (let image of imagesTable) {
+            console.log(path.extname(image.name))
+            console.log(uuidv4())
+        }
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports = {
+    getProducts, getProductById, getBestSellers, adminGetProducts, adminDeleteProduct,
+    adminCreateProducts, adminUpdateProduct, adminUpload
+};
 
