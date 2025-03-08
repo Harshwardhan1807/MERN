@@ -1,6 +1,8 @@
 const User = require("../models/UserModel");
+const Review = require("../models/ReviewModel");
 const { hashPassword, comparePassword } = require("../utils/hashPasswords");
 const generateAuthToken = require("../utils/generateAuthToken");
+const { use } = require("../routes/userRoutes");
 
 const getUsers = async (req, res, next) => {
   try {
@@ -71,7 +73,7 @@ const loginUser = async (req, res, next) => {
 
     const user = await User.findOne({ email });
     if (user && comparePassword(password, user.password)) {
-      
+
       let cookieParams = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -93,16 +95,67 @@ const loginUser = async (req, res, next) => {
         ),
         cookieParams
       ).json({
-          success: "user logged in",
-          userLoggedIn: { _id: user._id, name: user.name, lastName: user.lastName, email: user.email, isAdmin: user.isAdmin, doNotLogout },
+        success: "user logged in",
+        userLoggedIn: { _id: user._id, name: user.name, lastName: user.lastName, email: user.email, isAdmin: user.isAdmin, doNotLogout },
       });
     } else {
-       return res.status(401).send("wrong credentials") 
+      return res.status(401).send("wrong credentials")
     }
   } catch (err) {
     next(err);
   }
 };
 
-module.exports = { getUsers, registerUser, loginUser };
+const updateUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).orFail();
+    user.name = req.body.name || user.name;
+    user.lastName = req.body.lastName || user.lastName;
+    user.email = req.body.email || user.email;
+    user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
+    user.address = req.body.address || user.address;
+    user.country = req.body.country || user.country;
+    user.city = req.body.city || user.city;
+    user.zipCode = req.body.zipCode || user.zipCode;
+    user.state = req.body.state || user.state;
+    if (req.body.password !== user.password) {
+      user.password = hashPassword(req.body.password);
+    }
+    await user.save();
+    return res.json({ success: "user updated", userUpdated: user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+const getUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).orFail();
+    return res.send(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+const writeReview = async (req, res, next) => {
+  try {
+    const { comment, rating } = req.body
+    if (!comment || !rating) {
+      return res.status(400).send("All inputs are required")
+    }
+    const ObjectId = require("mongodb").ObjectId;
+    let reviewId = ObjectId();
+    await Review.create({
+      _id: reviewId,
+      comment: comment,
+      rating: Number(rating),
+      user: { _id: req.user._id, name: req.user.name + " " + req.user.lastName },
+    })
+    res.send("Review created")
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getUsers, registerUser, loginUser, updateUserProfile, getUserProfile, writeReview };
 
