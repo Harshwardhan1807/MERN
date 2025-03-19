@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // components:
 import HeaderComponent from "./components/HeaderComponent";
 import FooterComponent from "./components/FooterComponent";
-import RoutesWithUserChatComponent from "./components/users/RoutesWithUserChatComponent";
+
+//user components:
+import RoutesWithUserChatComponent from "./components/user/RoutesWithUserChatComponent";
 
 // publicly available pages:
 import HomePage from "./pages/HomePage";
@@ -31,8 +33,7 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminOrderDetailsPage from "./pages/admin/AdminOrderDetailsPage";
 import AdminChatsPage from "./pages/admin/AdminChatsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
-
-import ScrollToTop from "./utils/ScrollTop";
+import ScrollToTop from "./utils/ScrollToTop";
 
 function App() {
   return (
@@ -50,9 +51,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element="Page not exists 404" />
-
-          {/* <Route path="/" component={HomePage} />  in previous versions of react-router-dom */}
         </Route>
+        {/* <Route path="/" component={HomePage} />  in previous versions of react-router-dom */}
+
         {/* user protected routes: */}
         <Route element={<ProtectedRoutesComponent admin={false} />}>
           <Route path="/user" element={<UserProfilePage />} />
@@ -79,7 +80,7 @@ function App() {
           />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route
-            path="/admin/order-details"
+            path="/admin/order-details/:id"
             element={<AdminOrderDetailsPage />}
           />
           <Route path="/admin/chats" element={<AdminChatsPage />} />

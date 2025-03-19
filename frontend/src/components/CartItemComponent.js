@@ -1,20 +1,20 @@
 import { Col, ListGroup, Row, Image, Button, Form } from "react-bootstrap"
 
-const CardItemComponent = () => {
+const CardItemComponent = ({ item, orderCreated = false }) => {
     return (
         <>
             <ListGroup.Item>
                 <Row>
                     <Col md={2}>
-                        <Image crossOrigin="anonymous" src="/images/games-category.png" fluid />
+                        <Image crossOrigin="anonymous" src={item.image ? (item.image.path ?? null) : null} fluid />
                     </Col>
-                    <Col md={2}>Gaming Mouse</Col>
-                    <Col md={2}><b>$90</b></Col>
+                    <Col md={2}>{item.name}</Col>
+                    <Col md={2}><b>${item.price}</b></Col>
                     <Col md={3}>
-                        <Form.Select>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
+                        <Form.Select onChange={() => { }} disabled={orderCreated} value={item.quantity}>
+                            {[...Array(item.count).keys()].map((x) => (
+                                <option value={x + 1}>{x + 1}</option>
+                            ))}
                         </Form.Select>
                     </Col>
                     <Col md={3}>

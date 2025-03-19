@@ -9,7 +9,8 @@ const CartPage = () => {
           <h1>Shopping Cart</h1>
           <ListGroup variant="flush">
             {Array.from({ length: 3 }).map((item, idx) => (
-              <CardItemComponent key={idx} />
+              <CardItemComponent item={{ image: { path: "/images/monitors-category.png" }, name: "Monitor", price: 100, count: 10, quantity: 10 }}
+                key={idx} />
             ))}
           </ListGroup>
           <Alert info="variant">Your cart is empty</Alert>

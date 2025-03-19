@@ -38,7 +38,7 @@ const UserOrderDetailsPage = () => {
           <h2>Order Items</h2>
           <ListGroup variant="flush">
             {Array.from({ length: 3 }).map((item, idx) => (
-              <CartItemComponent key={idx} />
+              <CartItemComponent item={{ image: { path: "/images/monitors-category.png" }, name: "Monitor", price: 100, count: 10, quantity: 10 }} key={idx} />
             ))}
           </ListGroup>
         </Col>
