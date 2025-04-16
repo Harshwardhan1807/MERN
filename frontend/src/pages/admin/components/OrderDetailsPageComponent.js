@@ -11,6 +11,8 @@ import CartItemComponent from "../../../components/CartItemComponent";
 
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { logout } from "../../../redux/actions/userActions";
+import { useDispatch } from "react-redux";
 
 const OrderDetailsPageComponent = ({ getOrder, markAsDelivered }) => {
   const { id } = useParams();
@@ -22,6 +24,7 @@ const OrderDetailsPageComponent = ({ getOrder, markAsDelivered }) => {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [orderButtonMessage, setOrderButtonMessage] = useState("Mark as delivered");
   const [cartItems, setCartItems] = useState([]);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     getOrder(id)
@@ -40,9 +43,10 @@ const OrderDetailsPageComponent = ({ getOrder, markAsDelivered }) => {
         setCartItems(order.cartItems);
       })
       .catch((er) =>
-        console.log(
-          er.response.data.message ? er.response.data.message : er.response.data
-        )
+        dispatch(logout())
+        // console.log(
+        //   er.response.data.message ? er.response.data.message : er.response.data
+        // )
       );
   }, [isDelivered, id]);
   return (

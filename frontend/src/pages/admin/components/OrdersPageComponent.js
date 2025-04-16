@@ -4,12 +4,16 @@ import AdminLinksComponent from "../../../components/admin/AdminLinksComponent";
 
 import { useEffect, useState } from "react";
 
+import { logout } from "../../../redux/actions/userActions";
+import { useDispatch } from "react-redux";
+
 const OrdersPageComponent = ({ getOrders }) => {
   const [orders, setOrders] = useState([]);
+  const dispatch = useDispatch();
   useEffect(() => {
     getOrders()
       .then((orders) => setOrders(orders))
-      .catch(er => console.log(er.response.data.message ? er.response.data.message : er.response.data))
+      .catch((er) => dispatch(logout()));
   }, [])
   return (
     <Row className="m-5">
