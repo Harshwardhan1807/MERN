@@ -1,41 +1,12 @@
-import { Alert, Col, Container, ListGroup, Row, Button } from "react-bootstrap";
-import { LinkContainer } from "react-router-bootstrap";
-import CardItemComponent from "../components/CartItemComponent";
+import CartPageComponent from "./components/CartPageComponent";
+import {useDispatch, useSelector} from 'react-redux';
+import {addToCart} from '../redux/actions/cartActions';
+
 const CartPage = () => {
-  return (
-    <Container fluid>
-      <Row className="mt-4">
-        <Col md={8}>
-          <h1>Shopping Cart</h1>
-          <ListGroup variant="flush">
-            {Array.from({ length: 3 }).map((item, idx) => (
-              <CardItemComponent item={{ image: { path: "/images/monitors-category.png" }, name: "Monitor", price: 100, count: 10, quantity: 10 }}
-                key={idx} />
-            ))}
-          </ListGroup>
-          <Alert info="variant">Your cart is empty</Alert>
-        </Col>
-        <Col md={4}>
-          <ListGroup>
-            <ListGroup.Item>
-              <h1>Subtotal(2 items)</h1>
-            </ListGroup.Item>
-            <ListGroup.Item>
-              Price: <span className="fw-bold">$100</span>
-            </ListGroup.Item>
-            <ListGroup.Item>
-              <LinkContainer to="/user/cart-details">
-                <Button variant="primary">Checkout</Button>
-              </LinkContainer>
-
-            </ListGroup.Item>
-          </ListGroup>
-
-        </Col>
-      </Row>
-    </Container>
-  );
+  const cartItems = useSelector(state => state.cart.cartItems);
+  const cartSubtotal = useSelector(state => state.cart.cartSubtotal);
+  const reduxDispatch = useDispatch();
+  return <CartPageComponent addToCart={addToCart} cartItems={cartItems} cartSubtotal={cartSubtotal} reduxDispatch={reduxDispatch} />;
 };
 
 export default CartPage;
-
