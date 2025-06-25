@@ -1,65 +1,87 @@
-import { Alert, Col, Container, Form, ListGroup, Row, Button } from "react-bootstrap";
-import CartItemComponent from "../../components/CartItemComponent";
-const UserOrderDetailsPage = () => {
-  return (
-    <Container fluid>
-      <Row className="mt-4">
-        <h1>Order Details</h1>
-        <Col md={8}>
-          <br></br>
-          <Row>
-            <Col md={6}>
-              <h2>Shipping</h2>
-              <b>Name</b>: Mark Otto<br></br>
-              <b>Address</b>: 795 Folsom Ave, Suite 600<br></br>
-              <b>Phone</b>: (555) 555-5555<br></br>
-            </Col>
-            <Col md={6}>
-              <h2>Payment methods</h2>
-              <Form.Select disabled={false}>
-                <option value="pp">PayPal</option>
-                <option value="cod">Cash on Delivery</option>
-              </Form.Select>
-            </Col>
-            <Row>
-              <Col>
-                <Alert className="mt-3" variant="danger">
-                  Not Delivered
-                </Alert>
-              </Col>
-              <Col>
-                <Alert className="mt-3" variant="success">
-                  Paid on 1/1/2022
-                </Alert>
-              </Col>
-            </Row>
-          </Row>
-          <br></br>
-          <h2>Order Items</h2>
-          <ListGroup variant="flush">
-            {Array.from({ length: 3 }).map((item, idx) => (
-              <CartItemComponent item={{ image: { path: "/images/monitors-category.png" }, name: "Monitor", price: 100, count: 10, quantity: 10 }} key={idx} />
-            ))}
-          </ListGroup>
-        </Col>
-        <Col md={4}>
-          <ListGroup>
-            <ListGroup.Item><h3>Order Summary</h3></ListGroup.Item>
-            <ListGroup.Item><h3>Items price: <span className="fw-bold">$100</span></h3></ListGroup.Item>
-            <ListGroup.Item><h3>Shipping: <span className="fw-bold">included</span></h3></ListGroup.Item>
-            <ListGroup.Item><h3>Tax: <span className="fw-bold">included</span></h3></ListGroup.Item>
-            <ListGroup.Item className="text-danger"><h3>Total :<span className="fw-bold">$100</span></h3></ListGroup.Item>
-            <ListGroup.Item>
-              <div className="d-grid gap-2">
-                <Button variant="danger" type="button">Pay Now</Button>
-              </div>
-            </ListGroup.Item>
-          </ListGroup>
+import UserOrderDetailsPageComponent from "./components/UserOrderDetailsPageComponent";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { loadScript } from '@paypal/paypal-js'
 
-        </Col>
-      </Row>
-    </Container>
-  );
+const getOrder = async (id) => {
+  const { data } = await axios.get("/api/orders/user/" + id);
+  return data
+}
+
+const loadPayPalScript = (cartSubtotal, cartItems, orderID, updateStateAfterOrder) => {
+  loadScript({ "client-id": "AYdKVgx112WtuIBjJp66m9rQzlelwwngludzVm8Ci00OfKxsSO60LQMcZLMioZzf1ZRl0ZZ4idwkC-vw" })
+    .then(paypal => {
+      paypal.Buttons(buttons(cartSubtotal, cartItems, orderID, updateStateAfterOrder)).render("#paypal-container-element");
+    })
+    .catch((err) => console.log("Failed to load the script for paypal ", err));
+}
+
+const buttons = (cartSubtotal, cartItems, orderID, updateStateAfterOrder) => {
+  return {
+    createOrder: function (data, actions) {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: cartSubtotal,
+              breakdown: {
+                item_total: {
+                  currency_code: "USD",
+                  value: cartSubtotal,
+                }
+              }
+            },
+            items: cartItems.map(item => {
+              return {
+                name: item.name,
+                description: item.description,
+                quantity: item.quantity,
+                unit_amount: {
+                  currency_code: "USD",
+                  value: item.price,
+                },
+              }
+            })
+          },
+        ],
+      });
+    },
+    onCancel: onCancelHandler,
+    onApprove: function (data, actions) {
+      return actions.order.capture().then(function (details) {
+        var transaction = details.purchase_units[0].payments.captures[0];
+        if (transaction.status === "COMPLETED" && Number(transaction.amount.value) === Number(cartSubtotal)) {
+          updateOrder(orderID).then(data => {
+            if(data.isPaid){
+              updateStateAfterOrder(data.paidAt);
+            }
+          }).catch((err) => console.log(err));
+        }
+      });
+    },
+    onError: onErrorHandler
+  }
+}
+
+const onCancelHandler = function () {
+
+}
+
+const onErrorHandler = function () {
+
+}
+
+const updateOrder = async (orderID) => {
+  const { data } = await axios.put("/api/orders/paid/" + orderID);
+  return data;
+}
+const UserOrderDetailsPage = () => {
+  const userInfo = useSelector((state) => state.userRegisterLogin.userInfo);
+  const getUser = async () => {
+    const { data } = await axios.get("/api/users/profile/" + userInfo._id);
+    return data;
+  }
+  return <UserOrderDetailsPageComponent userInfo={userInfo} getUser={getUser} getOrder={getOrder} loadPayPalScript={loadPayPalScript} />;
 };
 
 export default UserOrderDetailsPage;

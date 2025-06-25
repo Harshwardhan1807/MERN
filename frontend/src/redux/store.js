@@ -1,11 +1,13 @@
 import { combineReducers, createStore, applyMiddleware, compose } from 'redux';
 import { cartReducer } from './reducers/cartReducers';
 import { userRegisterLoginReducer } from './reducers/userReducers';
+import { getCategoriesReducer } from './reducers/categoryReducers';
 import thunk from 'redux-thunk';
 
 const reducer = combineReducers({
     cart: cartReducer,
-    userRegisterLogin: userRegisterLoginReducer
+    userRegisterLogin: userRegisterLoginReducer,
+    getCategories: getCategoriesReducer
 });
 const cartItemsLocalStorage = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [];
 const userInfoInLocalStorage = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo'))

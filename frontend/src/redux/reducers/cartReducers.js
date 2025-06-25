@@ -32,6 +32,13 @@ export const cartReducer = (state = CART_INITIAL_STATE, action) => {
                 currentState.cartItems = [...state.cartItems, productBeingAdded];
             }
             return currentState;
+        case actionTypes.REMOVE_FROM_CART:
+            return {
+                ...state,
+                cartItems: state.cartItems.filter(item => item.productID !== action.payload.productID),
+                itemsCount: state.itemsCount - action.payload.quantity,
+                cartSubtotal: state.cartSubtotal - action.payload.price * action.payload.quantity,
+            }
         default:
             return state
     }

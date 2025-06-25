@@ -1,67 +1,27 @@
-import { Alert, Col, Container, Form, ListGroup, Row, Button } from "react-bootstrap";
-import CartItemComponent from "../../components/CartItemComponent";
-const UserCartDetailsPage = () => {
-  return (
-    <Container fluid>
-      <Row className="mt-4">
-        <h1>Cart Details</h1>
-        <Col md={8}>
-          <br></br>
-          <Row>
-            <Col md={6}>
-              <h2>Shipping</h2>
-              <b>Name</b>: Mark Otto<br></br>
-              <b>Address</b>: 795 Folsom Ave, Suite 600<br></br>
-              <b>Phone</b>: (555) 555-5555<br></br>
-            </Col>
-            <Col md={6}>
-              <h2>Payment methods</h2>
-              <Form.Select>
-                <option value="pp">PayPal</option>
-                <option value="cod">Cash on Delivery</option>
-              </Form.Select>
-            </Col>
-            <Row>
-              <Col>
-                <Alert className="mt-3" variant="danger">
-                  Not Delivered. In order to make order,fill out your profile details
-                </Alert>
-              </Col>
-              <Col>
-                <Alert className="mt-3" variant="success">
-                  Not paid yet
-                </Alert>
-              </Col>
-            </Row>
-          </Row>
-          <br></br>
-          <h2>Order Items</h2>
-          <ListGroup variant="flush">
-            {Array.from({ length: 3 }).map((item, idx) => (
-              <CartItemComponent item={{ image: { path: "/images/monitors-category.png" }, name: "Monitor", price: 100, count: 10, quantity: 10 }}
-                key={idx} />
-            ))}
-          </ListGroup>
-        </Col>
-        <Col md={4}>
-          <ListGroup>
-            <ListGroup.Item><h3>Order Summary</h3></ListGroup.Item>
-            <ListGroup.Item><h3>Items price: <span className="fw-bold">$100</span></h3></ListGroup.Item>
-            <ListGroup.Item><h3>Shipping: <span className="fw-bold">included</span></h3></ListGroup.Item>
-            <ListGroup.Item><h3>Tax: <span className="fw-bold">included</span></h3></ListGroup.Item>
-            <ListGroup.Item className="text-danger"><h3>Total :<span className="fw-bold">$100</span></h3></ListGroup.Item>
-            <ListGroup.Item>
-              <div className="d-grid gap-2">
-                <Button variant="danger" type="button">Pay Now</Button>
-              </div>
-            </ListGroup.Item>
-          </ListGroup>
+import UserCartDetailsPageComponent from "./components/UserCartDetailsPageComponent";
+import { useSelector, useDispatch } from "react-redux";
+import { addToCart, removeFromCart } from "../../redux/actions/cartActions";
+import axios from "axios";
 
-        </Col>
-      </Row>
-    </Container>
-  );
+const UserCartDetailsPage = () => {
+  const cartItems = useSelector(state => state.cart.cartItems);
+  const itemsCount = useSelector(state => state.cart.itemsCount);
+  const cartSubtotal = useSelector(state => state.cart.cartSubtotal);
+  const userInfo = useSelector(state => state.userRegisterLogin.userInfo);
+  const reduxDispatch = useDispatch();
+
+  const getUser = async () => {
+    const { data } = await axios.get("/api/users/profile/" + userInfo._id);
+    return data;
+  };
+
+  const createOrder = async (orderData) => {
+    const { data } = await axios.post("/api/orders", { ...orderData });
+    return data;
+  };
+
+  return <UserCartDetailsPageComponent cartItems={cartItems} itemsCount={itemsCount} cartSubtotal={cartSubtotal} userInfo={userInfo}
+    addToCart={addToCart} removeFromCart={removeFromCart} reduxDispatch={reduxDispatch} getUser={getUser} createOrder={createOrder} />;
 };
 
 export default UserCartDetailsPage;
-
