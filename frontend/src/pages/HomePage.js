@@ -1,27 +1,15 @@
-import ProductCarouselComponent from "../components/ProductCarouselComponent"
-import CategoryCardComponent from "../components/CategoryCardComponent";
-import Row from 'react-bootstrap/Row';
-import Container from 'react-bootstrap/Container';
-const HomePage = () => {
-    const categories=[
-        "Tablets",
-        "Monitors",
-        "Games",
-        "Printers",
-        "Software",
-        "Cameras",
-        "Books",
-        "Videos",
-    ]
-    return (
-        <>
-        <ProductCarouselComponent />
-        <Container>
-        <Row xs={1} md={2} className='g-4 mt-5'>
-            {categories.map((category,idx)=> <CategoryCardComponent key={idx} category={category} idx={idx} />)}
-        </Row>
-        </Container>
-        </>
-    )
+import HomePageComponent from "./components/HomePageComponent";
+import { useSelector } from "react-redux";
+import axios from "axios";
+
+
+const getBestSellers = async () => {
+    const { data } = await axios.get("/api/products/bestsellers");
+    return data
 }
+const HomePage = () => {
+    const { categories } = useSelector((state) => state.getCategories);
+    return <HomePageComponent categories={categories} getBestSellers={getBestSellers}/>
+};
+
 export default HomePage;
