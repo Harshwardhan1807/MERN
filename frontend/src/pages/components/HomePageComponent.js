@@ -3,6 +3,8 @@ import CategoryCardComponent from "../../components/CategoryCardComponent";
 import Row from 'react-bootstrap/Row';
 import Container from 'react-bootstrap/Container';
 import { useEffect, useState } from "react";
+import MetaComponent from "../../components/MetaComponent";
+
 const HomePageComponent = ({ categories, getBestSellers }) => {
     const [mainCategories, setMainCategories] = useState([]);
     const [bestSellers, setBestSellers] = useState([]);
@@ -16,6 +18,7 @@ const HomePageComponent = ({ categories, getBestSellers }) => {
 
     return (
         <>
+        <MetaComponent />
         <ProductCarouselComponent bestSellers={bestSellers}/>
         <Container>
         <Row xs={1} md={2} className='g-4 mt-5'>
