@@ -1,31 +1,43 @@
-import ProductCarouselComponent from "../../components/ProductCarouselComponent"
+import ProductCarouselComponent from "../../components/ProductCarouselComponent";
 import CategoryCardComponent from "../../components/CategoryCardComponent";
-import Row from 'react-bootstrap/Row';
-import Container from 'react-bootstrap/Container';
+import { Row, Container } from "react-bootstrap";
+
 import { useEffect, useState } from "react";
 import MetaComponent from "../../components/MetaComponent";
 
-const HomePageComponent = ({ categories, getBestSellers }) => {
+const HomePageComponent = ({ categories, getBestsellers }) => {
+  
     const [mainCategories, setMainCategories] = useState([]);
-    const [bestSellers, setBestSellers] = useState([]);
+    const [bestSellers, setBestsellers] = useState([]);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        getBestSellers()
-        .then((bestSellers) => setBestSellers(bestSellers))
-        .catch((err) => console.log(err.response.data.message ? err.response.data.message : err.response.data));
-        setMainCategories((cat)=> categories.filter((c) => !c.name.includes("/")));
+        getBestsellers()
+        .then((data) => {
+            setBestsellers(data);
+        })
+        .catch((er) => {
+            setError(er.response.data.message ? er.response.data.message : er.response.data)
+           console.log(er.response.data.message ? er.response.data.message : er.response.data) 
+        });
+        setMainCategories((cat) => categories.filter((item) => !item.name.includes("/")));
     }, [categories])
 
-    return (
-        <>
-        <MetaComponent />
-        <ProductCarouselComponent bestSellers={bestSellers}/>
-        <Container>
-        <Row xs={1} md={2} className='g-4 mt-5'>
-            {mainCategories.map((category,idx)=> <CategoryCardComponent key={idx} category={category} idx={idx} />)}
+  return (
+    <>
+    <MetaComponent />
+      <ProductCarouselComponent bestSellers={bestSellers} />
+      <Container>
+        <Row xs={1} md={2} className="g-4 mt-5">
+          {mainCategories.map((category, idx) => (
+            <CategoryCardComponent key={idx} category={category} idx={idx} />
+          ))}
         </Row>
-        </Container>
-        </>
-    )
-}
+        {error}
+      </Container>
+    </>
+  );
+};
+
 export default HomePageComponent;
+

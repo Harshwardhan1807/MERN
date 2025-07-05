@@ -8,7 +8,7 @@
     "server-prod": "node server.js",
     "server-dev": "npx nodemon server.js",
     "client": "npm start --prefix ../frontend",
-    "dev": "concurrently --kill-others-on-fail \"npm run server-dev\" \"npm run client\"",
+    "dev": "SET PORT=3001 && concurrently --kill-others-on-fail \"npm run server-dev\" \"npm run client\"",
     "seed:data": "node seeder/seeder",
     "seed:data-d": "node seeder/seeder -d"
   },
